@@ -18,67 +18,74 @@ const todoRoute = (req, res) => {
     body += chunk
   })
 
-  if (req.method === 'GET') {
-    successHandler(res, todoData)
-  }
-  else if (req.method === 'POST') {
-    req.on('end', () => {
-      try {
-        const title = JSON.parse(body).title
-        if (title) {
-          todoData.push({
-            id: uuidv4(),
-            title,
-          })
+  switch (req.method) {
+    case 'GET':
+      successHandler(res, todoData)
+      break
 
-          successHandler(res, todoData)
-        } else {
-          errorHandler(res, statusCodes.BAD_REQUEST, '請填寫正確的 title 內容!')
+    case 'POST':
+      req.on('end', () => {
+        try {
+          const title = JSON.parse(body).title
+          if (title) {
+            todoData.push({
+              id: uuidv4(),
+              title,
+            })
+
+            successHandler(res, todoData)
+          } else {
+            errorHandler(res, statusCodes.BAD_REQUEST, '請填寫正確的 title 內容!')
+          }
+        } catch {
+          errorHandler(res, statusCodes.BAD_REQUEST, '欄位未填寫正確!')
         }
-      } catch {
-        errorHandler(res, statusCodes.BAD_REQUEST, '欄位未填寫正確!')
-      }
-    })
-  }
-  else if (req.method === 'PATCH') {
-    req.on('end', () => {
-      try {
-        const title = JSON.parse(body).title
-        const index = todoData.findIndex(todo => todo.id === splitUrl[1])
+      })
+      break
 
-        if (title && index !== -1) {
-          todoData[index].title = title
-        } else {
-          errorHandler(res, statusCodes.BAD_REQUEST, '請修改正確 id 或填寫正確 title 內容!')
-          return
+    case 'PATCH':
+      req.on('end', () => {
+        try {
+          const title = JSON.parse(body).title
+          const index = todoData.findIndex(todo => todo.id === splitUrl[1])
+
+          if (title && index !== -1) {
+            todoData[index].title = title
+          } else {
+            errorHandler(res, statusCodes.BAD_REQUEST, '請修改正確 id 或填寫正確 title 內容!')
+            return
+          }
+
+          successHandler(res, todoData, '修改成功!')
+        } catch {
+          errorHandler(res, statusCodes.BAD_REQUEST, '格式錯誤!')
         }
+      })
+      break
 
-        successHandler(res, todoData, '修改成功!')
-      } catch {
-        errorHandler(res, statusCodes.BAD_REQUEST, '格式錯誤!')
-      }
-    })
-  }
-  else if (req.method === 'DELETE') {
-    const isDeleteAll = splitUrl.length === 1
-    if (isDeleteAll) {
-      todoData.length = 0
-      successHandler(res, todoData, '已刪除全部待辦事項!')
-    } else {
-      const index = todoData.findIndex(todo => todo.id === splitUrl[1])
-      if (index !== -1) {
-        todoData.splice(index, 1)
-        successHandler(res, todoData, '刪除一筆成功!')
+    case 'DELETE':
+      const isDeleteAll = splitUrl.length === 1
+      if (isDeleteAll) {
+        todoData.length = 0
+        successHandler(res, todoData, '已刪除全部待辦事項!')
       } else {
-        errorHandler(res, statusCodes.BAD_REQUEST, '刪除失敗，找不到此待辦事項!')
+        const index = todoData.findIndex(todo => todo.id === splitUrl[1])
+        if (index !== -1) {
+          todoData.splice(index, 1)
+          successHandler(res, todoData, '刪除一筆成功!')
+        } else {
+          errorHandler(res, statusCodes.BAD_REQUEST, '刪除失敗，找不到此待辦事項!')
+        }
       }
-    }
-  }
-  else if (req.method === 'OPTIONS') {
-    successHandler(res)
-  }
-  else {
-    errorHandler(res, statusCodes.NOT_FOUND, '404 Not Found!')
+      break
+
+    case 'OPTIONS':
+      successHandler(res)
+      break
+
+    default:
+      errorHandler(res, statusCodes.NOT_FOUND, '404 Not Found!')
+      break
   }
 }
 
