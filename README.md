@@ -35,7 +35,6 @@ $ npm run dev
 ```
 
 Normal run server :
-nodemon watch mode :
 ```
 $ npm run start
 ```
